@@ -54,8 +54,8 @@ Create responses.txt with bot response phrases (one per line)
 - Warcraft Logs API key (for logs feature)
 
 ## File Structure
-(U+000A)discord-bot/
-(U+000A)├── cogs/               # Command modules
+(U+000A) discord-bot/
+(U+000A) ├── cogs/               # Command modules
 - │   ├── fun.py          # Fun commands
 - │   ├── moderation.py   # Moderation tools
 - │   ├── wow.py          # WoW-related commands

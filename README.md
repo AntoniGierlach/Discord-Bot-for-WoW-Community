@@ -12,6 +12,7 @@ A feature-rich Discord bot designed for World of Warcraft communities with moder
 - `/solemnity` - Show guild progression and raid rankings
 - `/logs [character]` - Check Warcraft Logs statistics
 - `/weekly [character]` - Show Mythic+ runs completed this week
+- `/ce [character]` - Show every Cutting Edge achieved
 
 ### Moderation Tools
 - `/muteall` - Mute all users in voice channel
@@ -54,15 +55,17 @@ Create responses.txt with bot response phrases (one per line)
 
 ## File Structure
 discord-bot/  
+├── config.py  
+├── main.py  
 ├── cogs/  
 │   ├── __init__.py  
 │   ├── fun.py  
 │   ├── moderation.py  
 │   ├── wow.py  
 │   └── yapping.py  
-├── config.py  
-├── main.py  
-├── responses.txt  
+├── data/  
+│   ├── responses.txt  
+│   └── raids.txt  
 └── requirements.txt
 
 ## License

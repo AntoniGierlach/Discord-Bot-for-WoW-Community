@@ -37,10 +37,10 @@ A feature-rich Discord bot designed for World of Warcraft communities with moder
 `pip install -r requirements.txt`
 
 ## Set up configuration
-- `TOKEN = "your_discord_bot_token"`
-- `TELEGRAM_BOT_TOKEN = "your_telegram_bot_token"`
-- `TELEGRAM_CHAT_ID = "your_telegram_chat_id"`
-- `WCL_API_KEY = "your_warcraft_logs_api_key"`
+`TOKEN = "your_discord_bot_token"`  
+`TELEGRAM_BOT_TOKEN = "your_telegram_bot_token"`  
+`TELEGRAM_CHAT_ID = "your_telegram_chat_id"`  
+`WCL_API_KEY = "your_warcraft_logs_api_key"`  
 
 Create responses.txt with bot response phrases (one per line)
 
@@ -64,3 +64,6 @@ discord-bot/
 ├── main.py  
 ├── responses.txt  
 └── requirements.txt
+
+## License
+Distributed under the MIT License. See LICENSE for more information.

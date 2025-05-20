@@ -18,27 +18,35 @@ intents.voice_states = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+
 def load_responses():
     try:
-        with open('responses.txt', 'r', encoding='utf-8') as file:
+        with open('data/responses.txt', 'r', encoding='utf-8') as file:
             return file.read().splitlines()
     except FileNotFoundError:
         print("Plik 'responses.txt' nie istnieje. Utwórz plik z odpowiedziami.")
         return []
 
+
 responses = load_responses()
+
 
 async def load_cogs():
     await bot.add_cog(YappingCommands(bot))
     await bot.add_cog(WowCommands(bot))
     await bot.add_cog(FunCommands(bot))
     await bot.add_cog(ModerationCommands(bot))
-                
+
+
 @bot.event
 async def on_ready():
     print(f"✅ Bot {bot.user} jest online!")
     await load_cogs()
-    
+
+    yapping_cog = bot.get_cog("YappingCommands")
+    if yapping_cog:
+        await yapping_cog.initialize_message_counts()
+
     activity = discord.Streaming(name="via halori__", url="https://www.twitch.tv/halori__")
     await bot.change_presence(activity=activity)
 
@@ -47,6 +55,7 @@ async def on_ready():
         print(f"✅ Zsynchronizowano {len(synced)} globalnych komend.")
     except Exception as e:
         print(f"❌ Błąd synchronizacji komend: {e}")
+
 
 def send_telegram_message(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -63,15 +72,16 @@ def send_telegram_message(message):
     except Exception as e:
         print(f"❌ Błąd połączenia z Telegram API: {e}")
 
+
 @bot.event
 async def on_message(message):
     if message.author == bot.user or message.guild is None:
         return
-    
+
     yapping_cog = bot.get_cog("YappingCommands")
     if yapping_cog:
         await yapping_cog.increment_message_count(message.guild.id, message.author.id)
-    
+
     if str(bot.user.id) in message.content and responses:
         await message.reply(random.choice(responses))
 
@@ -100,5 +110,6 @@ async def on_message(message):
         send_telegram_message(f"{message.author.display_name} napisał na Discordzie:\n{message.content}")
 
     await bot.process_commands(message)
+
 
 bot.run(TOKEN)

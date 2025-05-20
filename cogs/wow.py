@@ -1,15 +1,98 @@
 import discord
 import requests
 import math
-import random
+import urllib.parse
 from discord.ext import commands
 from discord import app_commands, Embed
-from datetime import datetime, timezone
 from config import WCL_API_KEY
+
 
 class WowCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @app_commands.command(name="ce", description="Pokazuje ilość CE postaci")
+    @app_commands.describe(
+        nick="Nazwa postaci",
+        serwer="Serwer postaci (domyślnie burning-legion)"
+    )
+    async def ce(self, interaction: discord.Interaction, nick: str, serwer: str = "burning-legion"):
+        await interaction.response.defer()
+
+        try:
+            with open('data/raids.txt', 'r') as f:
+                raids_line = f.readline().strip()
+                raids_list = raids_line.split(':')[1:]
+
+            if not raids_list:
+                await interaction.followup.send("❌ Brak danych o raidach w pliku raids.txt")
+                return
+
+            fields_value = "raid_achievement_curve:" + ":".join(raids_list)
+
+            url = "https://raider.io/api/v1/characters/profile"
+            params = {
+                "region": "eu",
+                "realm": serwer.lower(),
+                "name": nick,
+                "fields": fields_value + ",thumbnail_url"
+            }
+
+            response = requests.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            character_name = data.get("name", nick)
+            realm = data.get("realm", serwer)
+            thumbnail_url = data.get("thumbnail_url", "")
+            achievements = data.get("raid_achievement_curve", [])
+
+            ce_list = []
+
+            for raid in achievements:
+                if raid.get("cutting_edge"):
+                    raid_name = raid["raid"].replace("-", " ").title()
+                    ce_date = raid["cutting_edge"].split("T")[0]
+                    ce_list.append(f"🔹 `{raid_name:<25}` {ce_date}")
+
+            embed = discord.Embed(
+                title=f"Cutting Edge 🔻 {character_name} | {realm}",
+                color=discord.Color.dark_gold()
+            )
+
+            if len(ce_list) == 0:
+                embed.description = f"{character_name} nie ma żadnego achievementu Cutting Edge 😢"
+            else:
+                embed.description = f"**Łącznie Cutting Edge:** {len(ce_list)}\n\n" + "\n".join(ce_list)
+
+            if thumbnail_url:
+                embed.set_thumbnail(url=thumbnail_url)
+
+            view = discord.ui.View()
+            encoded_name = urllib.parse.quote(character_name)
+            encoded_realm = urllib.parse.quote(realm)
+            raiderio_url = f"https://raider.io/characters/eu/{encoded_realm}/{encoded_name}"
+            view.add_item(
+                discord.ui.Button(
+                    label="Raider.io",
+                    url=raiderio_url,
+                    style=discord.ButtonStyle.link,
+                    emoji="📈"
+                )
+            )
+
+            embed.set_footer(text=f"{interaction.guild.name} • {self.bot.user.name}")
+            await interaction.followup.send(embed=embed, view=view)
+
+        except FileNotFoundError:
+            await interaction.followup.send("❌ Brak pliku raids.txt z listą raidów")
+        except requests.exceptions.HTTPError as e:
+            if hasattr(e, 'response') and e.response.status_code == 404:
+                await interaction.followup.send(f"❌ Nie znaleziono postaci {nick} na serwerze {serwer}")
+            else:
+                await interaction.followup.send(f"❌ Błąd podczas pobierania danych z Raider.io. Sprawdź poprawność nicku i serwera.")
+        except Exception as e:
+            await interaction.followup.send(f"❌ Wystąpił nieoczekiwany błąd: {e}")
 
     @app_commands.command(name="solemnity", description="Wyświetla informacje o gildii Solemnity.")
     @app_commands.describe(raid_index="Indeks raidu")
@@ -39,13 +122,13 @@ class WowCommands(commands.Cog):
                 return
 
             if raid_index < 0 or raid_index >= len(raid_list):
-                await interaction.followup.send(f"❌ Nieprawidłowy indeks raidu. Dostępne raidy: 0-{len(raid_list) - 1}.")
+                await interaction.followup.send(
+                    f"❌ Nieprawidłowy indeks raidu. Dostępne raidy: 0-{len(raid_list) - 1}.")
                 return
 
             current_raid = raid_list[raid_index]
             current_raid_data = raid_progression.get(current_raid, {})
             raid_summary = current_raid_data.get("summary", "Brak danych")
-            mythic_bosses = current_raid_data.get("mythic_bosses_killed", 0)
 
             if current_raid in raid_rankings:
                 mythic_rankings = raid_rankings[current_raid].get("mythic", {})
@@ -102,10 +185,22 @@ class WowCommands(commands.Cog):
                 color=discord.Color.gold()
             )
 
-            file = discord.File("solemnity.png", filename="solemnity.png")
+            file = discord.File("data/solemnity.png", filename="solemnity.png")
             embed.set_thumbnail(url="attachment://solemnity.png")
-            embed.set_footer(text=f"{interaction.guild.name} • {self.bot.user.name}")	
-            await interaction.followup.send(embed=embed, file=file)
+
+            view = discord.ui.View()
+            raiderio_url = f"https://raider.io/guilds/eu/burning-legion/Solemnity"
+            view.add_item(
+                discord.ui.Button(
+                    label="Raider.io",
+                    url=raiderio_url,
+                    style=discord.ButtonStyle,
+                    emoji="🌐"
+                )
+            )
+
+            embed.set_footer(text=f"{interaction.guild.name} • {self.bot.user.name}")
+            await interaction.followup.send(embed=embed, file=file, view=view)
 
         except requests.exceptions.RequestException as e:
             await interaction.followup.send(f"❌ Błąd podczas pobierania danych z Raider.io: {e}")
@@ -120,7 +215,7 @@ class WowCommands(commands.Cog):
     async def weekly(self, interaction: discord.Interaction, nick: str, realm: str = "burning-legion"):
         await interaction.response.defer()
         characters = nick.split()
-        
+
         if len(characters) == 1:
             await self.process_single_character(interaction, characters[0], realm)
             return
@@ -128,7 +223,7 @@ class WowCommands(commands.Cog):
         try:
             results = []
             thumbnails = []
-            
+
             for character in characters:
                 url = "https://raider.io/api/v1/characters/profile"
                 params = {
@@ -137,7 +232,7 @@ class WowCommands(commands.Cog):
                     "name": character,
                     "fields": "mythic_plus_weekly_highest_level_runs,name,thumbnail_url"
                 }
-                
+
                 response = requests.get(url, params=params)
                 response.raise_for_status()
                 data = response.json()
@@ -146,7 +241,7 @@ class WowCommands(commands.Cog):
                 weekly_runs = data.get("mythic_plus_weekly_highest_level_runs", [])
                 num_runs = len(weekly_runs)
                 thumbnail_url = data.get("thumbnail_url", "")
-                
+
                 if num_runs == 0:
                     results.append(f"💀 `{character_name:<10}` **0** dungów")
                 elif num_runs == 1:
@@ -157,19 +252,19 @@ class WowCommands(commands.Cog):
                     results.append(f"🤨 `{character_name:<10}` **{num_runs}** dungów")
                 else:
                     results.append(f"😎 `{character_name:<10}` **{num_runs}** dungów")
-               
+
                 if thumbnail_url and not thumbnails:
                     thumbnails.append(thumbnail_url)
-            
+
             embed = Embed(
                 title=f"Weekly 🔻 Multisearch",
                 description="\n".join(results),
                 color=discord.Color.purple()
             )
-            
+
             if thumbnails:
                 embed.set_thumbnail(url=thumbnails[0])
-                
+
             embed.set_footer(text=f"{interaction.guild.name} • {self.bot.user.name}")
             await interaction.followup.send(embed=embed)
 
@@ -200,7 +295,7 @@ class WowCommands(commands.Cog):
             weekly_runs = data.get("mythic_plus_weekly_highest_level_runs", [])
             num_runs = len(weekly_runs)
             thumbnail_url = data.get("thumbnail_url", "")
-            
+
             if num_runs == 0:
                 message = f"{nick} nie zagrał **żadnego** dunga w tym tygodniu 💀"
             elif num_runs == 1:
@@ -217,12 +312,24 @@ class WowCommands(commands.Cog):
                 description=message,
                 color=discord.Color.purple()
             )
-            
+
             if thumbnail_url:
                 embed.set_thumbnail(url=thumbnail_url)
-                
+
+            view = discord.ui.View()
+            encoded_name = urllib.parse.quote(nick)
+            encoded_realm = urllib.parse.quote(realm)
+            view.add_item(
+                discord.ui.Button(
+                    label="Raider.io",
+                    url=f"https://raider.io/characters/eu/{encoded_realm}/{encoded_name}",
+                    style=discord.ButtonStyle.link,
+                    emoji="📈"
+                )
+            )
+
             embed.set_footer(text=f"{interaction.guild.name} • {self.bot.user.name}")
-            await interaction.followup.send(embed=embed)
+            await interaction.followup.send(embed=embed, view=view)
 
         except requests.exceptions.HTTPError as e:
             if response.status_code == 404:
@@ -231,7 +338,7 @@ class WowCommands(commands.Cog):
                 await interaction.followup.send(f"❌ Błąd podczas pobierania danych z Raider.io: {e}")
         except Exception as e:
             await interaction.followup.send(f"❌ Wystąpił nieoczekiwany błąd: {e}")
-            
+
     @app_commands.command(name="logs", description="Pokazuje statystyki postaci z Warcraft Logs")
     @app_commands.describe(
         nick="Nazwa postaci",
@@ -240,20 +347,20 @@ class WowCommands(commands.Cog):
     )
     async def logs(self, interaction: discord.Interaction, nick: str, serwer: str = "burning-legion", tryb: str = "M"):
         await interaction.response.defer()
-        
+
         WCL_BASE_URL = "https://www.warcraftlogs.com/v1/rankings/character"
         RIO_BASE_URL = "https://raider.io/api/v1/characters/profile"
-        
+
         difficulty_map = {
             "M": 5,
             "HC": 4
         }
-        
+
         tryb = tryb.upper()
         if tryb not in difficulty_map:
             await interaction.followup.send("❌ Nieprawidłowy tryb. Dostępne opcje: M (Mythic) lub HC (Heroic)")
             return
-        
+
         target_difficulty = difficulty_map[tryb]
 
         try:
@@ -267,29 +374,29 @@ class WowCommands(commands.Cog):
             rio_response.raise_for_status()
             rio_data = rio_response.json()
             thumbnail_url = rio_data.get("thumbnail_url", "")
-            
+
             wcl_url = f"{WCL_BASE_URL}/{nick}/{serwer}/EU?timeframe=historical&api_key={WCL_API_KEY}"
             wcl_response = requests.get(wcl_url)
             wcl_response.raise_for_status()
             logs_data = wcl_response.json()
-            
+
             if not logs_data:
                 await interaction.followup.send(f"❌ Brak danych logów dla postaci {nick} na serwerze {serwer}")
                 return
-            
+
             character_class = logs_data[0].get("class", "Nieznana klasa")
             character_spec = logs_data[0].get("spec", "")
             server_name = logs_data[0].get("server", serwer)
             formatted_nick = nick.capitalize()
-            
+
             results = []
             for encounter in logs_data:
                 if encounter.get("difficulty") != target_difficulty:
                     continue
-                    
+
                 boss_name = encounter.get("encounterName", "Nieznany boss")
                 percentile = math.floor(encounter.get("percentile", 0))
-                
+
                 if percentile < 25:
                     results.append(f"🔸 `{boss_name:<30}` <:gagaga:1276850810587840512> **{percentile}**")
                 elif 25 <= percentile < 50:
@@ -304,23 +411,36 @@ class WowCommands(commands.Cog):
                     results.append(f"🔸 `{boss_name:<30}` 🩷 **{percentile}**")
                 else:
                     results.append(f"🔸 `{boss_name:<30}` 💛 **{percentile}**")
-            
+
             if not results:
-                await interaction.followup.send(f"❌ Brak logów na difficulty {'Mythic' if tryb == 'M' else 'Heroic'} dla postaci {formatted_nick}")
+                await interaction.followup.send(
+                    f"❌ Brak logów na difficulty {'Mythic' if tryb == 'M' else 'Heroic'} dla postaci {formatted_nick}")
                 return
-            
+
             embed = discord.Embed(
                 title=f"Logi 🔻 {formatted_nick} | {server_name} | {'Mythic' if tryb == 'M' else 'Heroic'}",
                 description=f"{character_class} | {character_spec}\n\n" + "\n".join(results[:15]),
                 color=discord.Color.purple()
             )
-            
+
             if thumbnail_url:
                 embed.set_thumbnail(url=thumbnail_url)
-            
+
+            view = discord.ui.View()
+            encoded_name = urllib.parse.quote(nick)
+            encoded_realm = urllib.parse.quote(serwer)
+            view.add_item(
+                discord.ui.Button(
+                    label="Warcraft Logs",
+                    url=f"https://www.warcraftlogs.com/character/eu/{encoded_realm}/{encoded_name}",
+                    style=discord.ButtonStyle.link,
+                    emoji="🔗"
+                )
+            )
+
             embed.set_footer(text=f"{interaction.guild.name} • {self.bot.user.name}")
-            await interaction.followup.send(embed=embed)
-            
+            await interaction.followup.send(embed=embed, view=view)
+
         except requests.exceptions.HTTPError as e:
             if hasattr(e, 'response') and e.response.status_code == 404:
                 await interaction.followup.send(f"❌ Nie znaleziono postaci {formatted_nick} na serwerze {serwer}")
@@ -328,6 +448,7 @@ class WowCommands(commands.Cog):
                 await interaction.followup.send(f"❌ Błąd podczas pobierania danych: {e}")
         except Exception as e:
             await interaction.followup.send(f"❌ Wystąpił nieoczekiwany błąd: {e}")
+
 
 async def setup(bot):
     await bot.add_cog(WowCommands(bot))

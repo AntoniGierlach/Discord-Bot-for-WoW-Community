@@ -28,7 +28,6 @@ A feature-rich Discord bot designed for World of Warcraft communities with moder
 - `/yapping_user [user]` - Check user's message count
 
 ### Automation
-- Random reactions to messages
 - MP4 file forwarding to specific channel
 - Telegram notifications from designated channel
 - Automated responses when mentioned

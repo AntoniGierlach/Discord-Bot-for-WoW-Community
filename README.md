@@ -56,6 +56,7 @@ Create responses.txt with bot response phrases (one per line)
 ## File Structure
 discord-bot/  
 ├── cogs/  
+│   ├── __init__.py  
 │   ├── fun.py  
 │   ├── moderation.py  
 │   ├── wow.py  

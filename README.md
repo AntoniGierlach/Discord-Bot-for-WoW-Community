@@ -2,7 +2,7 @@
 
 ![Bot Status](https://img.shields.io/badge/status-active-brightgreen)
 ![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)
-![Discord.py Version](https://img.shields.io/badge/discord.py-2.5.2-orange)
+![Discord.py Version](https://img.shields.io/badge/discord.py-2.3-orange)
 
 A feature-rich Discord bot designed for World of Warcraft communities with moderation, utility, and fun commands.
 

@@ -37,10 +37,10 @@ A feature-rich Discord bot designed for World of Warcraft communities with moder
 `pip install -r requirements.txt`
 
 ## Set up configuration
-`TOKEN = "your_discord_bot_token"`
-`TELEGRAM_BOT_TOKEN = "your_telegram_bot_token"`
-`TELEGRAM_CHAT_ID = "your_telegram_chat_id"`
-`WCL_API_KEY = "your_warcraft_logs_api_key"`
+- `TOKEN = "your_discord_bot_token"`
+- `TELEGRAM_BOT_TOKEN = "your_telegram_bot_token"`
+- `TELEGRAM_CHAT_ID = "your_telegram_chat_id"`
+- `WCL_API_KEY = "your_warcraft_logs_api_key"`
 
 Create responses.txt with bot response phrases (one per line)
 
@@ -49,18 +49,18 @@ Create responses.txt with bot response phrases (one per line)
 
 ## Requirements
 - Python 3.8+
- discord.py 2.3.0+
+- discord.py 2.3.0+
 - requests library
 - Warcraft Logs API key (for logs feature)
 
 ## File Structure
-discord-bot/
-├── cogs/               # Command modules
-│   ├── fun.py          # Fun commands
-│   ├── moderation.py   # Moderation tools
-│   ├── wow.py          # WoW-related commands
-│   └── yapping.py      # Message analytics
-├── config.py           # Configuration file
-├── main.py             # Main bot file
-├── responses.txt       # Bot response phrases
-└── requirements.txt    # Dependencies
+- discord-bot/
+- ├── cogs/               # Command modules
+- │   ├── fun.py          # Fun commands
+- │   ├── moderation.py   # Moderation tools
+- │   ├── wow.py          # WoW-related commands
+- │   └── yapping.py      # Message analytics
+- ├── config.py           # Configuration file
+- ├── main.py             # Main bot file
+- ├── responses.txt       # Bot response phrases
+- └── requirements.txt    # Dependencies

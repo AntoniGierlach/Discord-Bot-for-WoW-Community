@@ -55,12 +55,12 @@ Create responses.txt with bot response phrases (one per line)
 
 ## File Structure
 discord-bot/
-├── cogs/               # Command modules  
-│   ├── fun.py          # Fun commands  
-│   ├── moderation.py   # Moderation tools  
-│   ├── wow.py          # WoW-related commands  
-│   └── yapping.py      # Message analytics  
-├── config.py           # Configuration file  
-├── main.py             # Main bot file  
-├── responses.txt       # Bot response phrases  
-└── requirements.txt    # Dependencies  
+├── cogs/                   # Command modules  
+│   ├── fun.py              # Fun commands  
+│   ├── moderation.py       # Moderation tools  
+│   ├── wow.py              # WoW-related commands  
+│   └── yapping.py          # Message analytics  
+├── config.py               # Configuration file  
+├── main.py                 # Main bot file  
+├── responses.txt           # Bot response phrases  
+└── requirements.txt        # Dependencies  

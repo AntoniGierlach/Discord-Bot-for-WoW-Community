@@ -28,6 +28,12 @@ A feature-rich Discord bot designed for World of Warcraft communities with moder
 - `/yapping` - Show server message activity level
 - `/yapping_user [user]` - Check user's message count
 
+### Absence handling
+This feature enables the configuration of a designated channel for submitting attendance through a form, with support for various date validation methods.
+
+### Professions
+This feature allows you to sign-up as a crafter in a specific channel.
+
 ### Automation
 - MP4 file forwarding to specific channel
 - Telegram notifications from designated channel
@@ -59,8 +65,10 @@ discord-bot/
 ├── main.py  
 ├── cogs/  
 │   ├── __init__.py  
+│   ├── absence.py  
 │   ├── fun.py  
 │   ├── moderation.py  
+│   ├── professions.py  
 │   ├── wow.py  
 │   └── yapping.py  
 ├── data/  

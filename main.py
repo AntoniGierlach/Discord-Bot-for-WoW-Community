@@ -6,18 +6,18 @@ from cogs.wow import WowCommands
 from cogs.fun import FunCommands
 from cogs.moderation import ModerationCommands
 from cogs.yapping import YappingCommands
-from discord import app_commands
-from datetime import datetime, timezone
+from cogs.professions import ProfesjeSystem
+from cogs.absence import NieobecnosciSystem
 from config import TOKEN, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 
 intents = discord.Intents.default()
 intents.guilds = True
 intents.messages = True
+intents.members = True
 intents.message_content = True
 intents.voice_states = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
-
 
 def load_responses():
     try:
@@ -36,6 +36,8 @@ async def load_cogs():
     await bot.add_cog(WowCommands(bot))
     await bot.add_cog(FunCommands(bot))
     await bot.add_cog(ModerationCommands(bot))
+    await bot.add_cog(ProfesjeSystem(bot))
+    await bot.add_cog(NieobecnosciSystem(bot))
 
 
 @bot.event
@@ -110,6 +112,5 @@ async def on_message(message):
         send_telegram_message(f"{message.author.display_name} napisał na Discordzie:\n{message.content}")
 
     await bot.process_commands(message)
-
 
 bot.run(TOKEN)
